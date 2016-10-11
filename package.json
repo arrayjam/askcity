@@ -1,0 +1,25 @@
+{
+  "name": "askcity",
+  "version": "0.1.0",
+  "private": true,
+  "devDependencies": {
+    "react-scripts": "0.6.1"
+  },
+  "dependencies": {
+    "@types/d3-array": "1.0.5",
+    "@types/faker": "3.1.32",
+    "@types/geojson": "0.0.31",
+    "@types/node": "6.0.45",
+    "d3-array": "1.0.1",
+    "faker": "3.1.0",
+    "react": "15.3.2",
+    "react-dom": "15.3.2",
+    "typescript": "2.0.3"
+  },
+  "scripts": {
+    "start": "react-scripts start",
+    "build": "react-scripts build",
+    "test": "react-scripts test --env=jsdom",
+    "eject": "react-scripts eject"
+  }
+}
