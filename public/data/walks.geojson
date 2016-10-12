@@ -13,7 +13,10 @@
           "scenic",
           "2 Hours"
         ],
-        "conversations": []
+        "conversations": [],
+        "walk": true,
+        "scenic": true,
+        "2 Hours": true
       },
       "geometry": {
         "type": "MultiLineString",
@@ -584,7 +587,11 @@
               }
             ]
           }
-        ]
+        ],
+        "walk": true,
+        "entertainment": true,
+        "scenic": true,
+        "2 Hours": true
       },
       "geometry": {
         "type": "MultiLineString",
@@ -1259,7 +1266,11 @@
           "entertainment",
           "1.5 Hours"
         ],
-        "conversations": []
+        "conversations": [],
+        "walk": true,
+        "history": true,
+        "entertainment": true,
+        "1.5 Hours": true
       },
       "geometry": {
         "type": "MultiLineString",
@@ -1599,7 +1610,10 @@
               }
             ]
           }
-        ]
+        ],
+        "walk": true,
+        "scenic": true,
+        "2 Hours": true
       },
       "geometry": {
         "type": "MultiLineString",
@@ -2077,7 +2091,10 @@
           "scenic",
           "2.5 Hours"
         ],
-        "conversations": []
+        "conversations": [],
+        "walk": true,
+        "scenic": true,
+        "2.5 Hours": true
       },
       "geometry": {
         "type": "LineString",
@@ -3165,7 +3182,10 @@
               }
             ]
           }
-        ]
+        ],
+        "walk": true,
+        "entertainment": true,
+        "2 Hours": true
       },
       "geometry": {
         "type": "LineString",
@@ -3397,7 +3417,10 @@
           "entertainment",
           "2 Hours"
         ],
-        "conversations": []
+        "conversations": [],
+        "walk": true,
+        "entertainment": true,
+        "2 Hours": true
       },
       "geometry": {
         "type": "LineString",

@@ -15,6 +15,7 @@ class App extends Component {
       features: [],
       activeTags: d3.set(),
       tags: d3.map(),
+      filterType: "all",
     };
   }
 
@@ -49,6 +50,31 @@ class App extends Component {
           tags: tags,
           activeTags: d3.set(tags.keys()),
         });
+
+        // When a click event occurs near a place, open a popup at the location of
+        // the feature, with description HTML from its properties.
+        map.on('click', e => {
+          var features = map.queryRenderedFeatures(e.point, { layers: this.getLayers() });
+
+          if (!features.length) {
+            return;
+          }
+
+          var feature = features[0];
+          // Populate the popup and set its coordinates
+          // based on the feature found.
+          new mapboxgl.Popup()
+            .setLngLat(e.lngLat)
+            .setHTML(`Tags: ${JSON.parse(feature.properties.tags).join(", ")}`)
+            .addTo(map);
+        });
+
+        // Use the same approach as above to indicate that the symbols are clickable
+        // by changing the cursor style to 'pointer'.
+        map.on('mousemove', (e) => {
+          var features = map.queryRenderedFeatures(e.point, { layers: this.getLayers() });
+          map.getCanvas().style.cursor = (features.length) ? 'pointer' : '';
+        });
       });
     });
   }
@@ -65,14 +91,54 @@ class App extends Component {
     }
 
     if (activeTags.size() === 0) {
-      activeTags = d3.set(tags.keys());
+      return this.resetTags();
     }
 
-    this.setState({ activeTags: activeTags });
+    this.setState({
+      activeTags: activeTags,
+    }, this.createFilter);
+  }
+
+  getLayers() {
+    return [
+      "Under Construction",
+      "Approved",
+      "Applied",
+      "Roadworks",
+    ];
+  }
+
+  createFilter() {
+    const filter = [this.state.filterType];
+    this.state.activeTags.each(tag => filter.push(["has", tag]));
+
+    this.getLayers().forEach(layer => {
+      console.log("setFilter on layer", layer, filter);
+      map.setFilter(layer, filter);
+    });
+  }
+
+  componentDidUpdate() {
+  }
+
+  resetTags() {
+    const { tags } = this.state;
+    this.setState({
+      activeTags: d3.set(tags.keys()),
+    });
+    this.getLayers().forEach(layer => {
+      map.setFilter(layer, null);
+    });
+  }
+
+  handleFilterTypeChange() {
+    this.setState({
+      filterType: this.state.filterType === "all" ? "any" : "all"
+    }, this.createFilter);
   }
 
   render() {
-    const { tags, activeTags } = this.state;
+    const { tags, activeTags, filterType } = this.state;
     const tagExtent = d3.extent(tags.values());
     const saturationChangeScale = d3.scaleSqrt().domain(tagExtent).range([0.3, 1])
     const tagFontSizeScale = d3.scaleLinear().domain(tagExtent).range([12, 18]);
@@ -82,15 +148,16 @@ class App extends Component {
       const scheme = d3.schemeCategory10;
       const n = 10;
       const color = d3.hsl(scheme[index % n]);
-      color.s = color.s * saturationChangeScale(value);
+      color.s *= saturationChangeScale(value);
       return color.toString();
     };
 
     return (
-      <div className="sidebar">
+      <div className="sidebar" >
         Tags:
-        { activeTags.size() !== tags.size() && <button className="reset-tags" onClick={() => this.setState({ activeTags: d3.set(tags.keys())})}>Reset tags filter</button> }
-        <ul className="tags">
+        <button className="filter-type" onClick={this.handleFilterTypeChange.bind(this)}>{filterType}</button>
+        {activeTags.size() !== tags.size() && <button className="reset-tags" onClick={this.resetTags.bind(this)}>Reset tags filter</button>}
+        <ul className="tags" >
           {
             tagEntries.map(({key, value}, index) => (
               <li className="tag" key={key} style={{
@@ -105,8 +172,8 @@ class App extends Component {
               </li>)
             )
           }
-        </ul>
-      </div>
+        </ul >
+      </div >
     );
   }
 }

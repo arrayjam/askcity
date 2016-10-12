@@ -14,6 +14,7 @@ switch (process.argv[3]) {
     case "roadworks": type = "roadworks"; break;
     case "buildings": type = "buildings"; break;
     case "conversations": type = "conversations"; break;
+    case "tags": type = "tags"; break;
     default: console.error("No type, or incorrect type specified. Got \"%s\"", process.argv[3]); process.exit(1);
 }
 
@@ -43,6 +44,10 @@ const changedFeatures = featureCollection.features.map(feature => {
             }
         }
         feature.properties.tags.push(floor);
+    } else if (type === "tags") {
+        feature.properties.tags.forEach(tag => {
+            feature.properties[tag] = true;
+        });
     } else if (type === "conversations") {
         delete feature.properties.comments;
 

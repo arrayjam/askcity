@@ -1,7 +1,8 @@
 {
   "datasets": [
-    "buildings.geojson",
-    "roadworks.geojson",
-    "walks.geojson"
+    "applied.geojson",
+    "under_construction.geojson",
+    "approved.geojson",
+    "roadworks.geojson"
   ]
 }
