@@ -10,8 +10,10 @@
     "@types/faker": "3.1.32",
     "@types/geojson": "0.0.31",
     "@types/node": "6.0.45",
+    "d3": "^4.2.7",
     "d3-array": "1.0.1",
     "faker": "3.1.0",
+    "mapbox-gl": "^0.25.1",
     "react": "15.3.2",
     "react-dom": "15.3.2",
     "typescript": "2.0.3"

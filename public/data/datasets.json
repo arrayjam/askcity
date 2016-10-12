@@ -1,0 +1,7 @@
+{
+  "datasets": [
+    "buildings.geojson",
+    "roadworks.geojson",
+    "walks.geojson"
+  ]
+}

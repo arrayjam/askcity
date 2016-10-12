@@ -13,23 +13,15 @@ switch (process.argv[3]) {
     case "walks": type = "walks"; break;
     case "roadworks": type = "roadworks"; break;
     case "buildings": type = "buildings"; break;
+    case "conversations": type = "conversations"; break;
     default: console.error("No type, or incorrect type specified. Got \"%s\"", process.argv[3]); process.exit(1);
 }
 
 const changedFeatures = featureCollection.features.map(feature => {
-    const comments = range(randomBetween(0, 6)).map(comment => {
-        const name = Faker.name;
-        return {
-            name: `${name.firstName()} ${name.lastName()}`,
-            text: Faker.lorem.paragraphs(randomBetween(1, 5)),
-        }
-    });
-    feature.properties.comments = comments;
-
     if (type === "walks") {
         feature.properties.tags = ["walk"];
     } else if (type === "roadworks") {
-        feature.properties.tags = ["roadworks", "disruption", feature.properties.asset_type.toLowerCase() ];
+        feature.properties.tags = ["roadworks", "disruption", feature.properties.asset_type.toLowerCase()];
     } else if (type === "buildings") {
         const status: string = feature.properties.status;
         feature.properties.tags = ["developments"];
@@ -51,6 +43,35 @@ const changedFeatures = featureCollection.features.map(feature => {
             }
         }
         feature.properties.tags.push(floor);
+    } else if (type === "conversations") {
+        delete feature.properties.comments;
+
+        const person = () => {
+            return {
+                name: `${Faker.name.firstName()} ${Faker.name.lastName()}`,
+                avatar_uri: Faker.internet.avatar(),
+            };
+        };
+
+        const time = () => randomBetween(1444603649, 1476226049);
+        const conversations = range(randomBetween(0, 3)).map(conversation => {
+            return {
+                title: Faker.lorem.sentence(1),
+                submitter: person(),
+                time: time(),
+                link: Faker.internet.url(),
+                comments: range(randomBetween(0, 6)).map(comment => {
+                    return {
+                        commenter: person(),
+                        time: time(),
+                        text: Faker.lorem.paragraphs(randomBetween(1, 5)),
+                    }
+
+                })
+            };
+        });
+
+        feature.properties.conversations = conversations;
     }
     return feature;
 });
