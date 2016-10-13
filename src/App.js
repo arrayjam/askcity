@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import * as d3 from "d3";
+// eslint-disable-next-line
 const mapboxgl = require("mapbox-gl/dist/mapbox-gl.js");
 mapboxgl.accessToken = "pk.eyJ1IjoiY29tZWxib3VybmUiLCJhIjoiY2lxbHFzYmt2MDAzMWZ5bm53Y2d0NjRoMyJ9.xXFwyo0bSVHG1-W33fV0xQ";
 const map = window.map = new mapboxgl.Map({
@@ -15,7 +16,8 @@ class App extends Component {
       features: [],
       activeTags: d3.set(),
       tags: d3.map(),
-      filterType: "all",
+      filterType: "any",
+      addingToMap: null,
     };
   }
 
@@ -48,13 +50,25 @@ class App extends Component {
         this.setState({
           features: features,
           tags: tags,
-          activeTags: d3.set(tags.keys()),
-        });
+          activeTags: d3.set()//d3.set(tags.keys()),
+        }, this.createFilter);
 
         // When a click event occurs near a place, open a popup at the location of
         // the feature, with description HTML from its properties.
         map.on('click', e => {
-          var features = map.queryRenderedFeatures(e.point, { layers: this.getLayers() });
+          if (this.state.addingToMap) {
+            window.popup = new mapboxgl.Popup()
+              .setLngLat(e.lngLat)
+              .setDOMContent(this.refs["add-to-map-popup"])
+              // .setHTML(`<form onSubmit="javascript:(function(event) { event.preventDefault(); console.log(event); })()">Have your say<br /><input type="text" placeholder="Hello..." /></form>`)
+              .addTo(map);
+
+            this.setState({ addingToMap: { position: e.lngLat } })
+
+            return;
+          }
+
+          var features = map.queryRenderedFeatures(e.point, { layers: ["ArdenBoundary"] });
 
           if (!features.length) {
             return;
@@ -65,14 +79,27 @@ class App extends Component {
           // based on the feature found.
           new mapboxgl.Popup()
             .setLngLat(e.lngLat)
-            .setHTML(`Tags: ${JSON.parse(feature.properties.tags).join(", ")}`)
+            .setHTML(`
+            <div style="width: 350px">
+              <h2>Arden Station</h2>
+              <p>Arden station in North Melbourne will trigger significant urban renewal of this inner-city growth area, facilitating the expansion of the central city and future proofing Melbourne's economic prosperity.</p>
+
+              <p>Metro Tunnel's Arden station provides the opportunity to connect growth areas in Melbourne's west to the growing knowledge workforces and residential communities in Docklands and the Arden-Macaulay precinct as well as established areas including Parkville and the CBD, and existing communities in North Melbourne and West Melbourne.</p>
+
+              <p>Find out more by visiting <a href="http://www.ardenmacaulay.vic.gov.au">www.ardenmacaulay.vic.gov.au</a> or tell us what you think!</p>
+
+              <p>Add comment</p>
+              <input type="text" style="width: 100%" /><br />
+              <button type="submit" style="float: right; margin-top: 5px;">Submit</button>
+            </div>
+            `)
             .addTo(map);
         });
 
         // Use the same approach as above to indicate that the symbols are clickable
         // by changing the cursor style to 'pointer'.
         map.on('mousemove', (e) => {
-          var features = map.queryRenderedFeatures(e.point, { layers: this.getLayers() });
+          var features = map.queryRenderedFeatures(e.point, { layers: ["ArdenBoundary"] });
           map.getCanvas().style.cursor = (features.length) ? 'pointer' : '';
         });
       });
@@ -109,8 +136,13 @@ class App extends Component {
   }
 
   createFilter() {
-    const filter = [this.state.filterType];
-    this.state.activeTags.each(tag => filter.push(["has", tag]));
+    let filter;
+    if (this.state.activeTags.size() === 0) {
+      filter = ["==", "something", "something"];
+    } else {
+      filter = [this.state.filterType];
+      this.state.activeTags.each(tag => filter.push(["has", tag]));
+    }
 
     this.getLayers().forEach(layer => {
       console.log("setFilter on layer", layer, filter);
@@ -137,8 +169,15 @@ class App extends Component {
     }, this.createFilter);
   }
 
+  addToMap() {
+    map.getCanvas().style.cursor = "cross";
+    this.setState({
+      addingToMap: true,
+    })
+  }
+
   render() {
-    const { tags, activeTags, filterType } = this.state;
+    const { tags, activeTags, filterType, addingToMap } = this.state;
     const tagExtent = d3.extent(tags.values());
     const saturationChangeScale = d3.scaleSqrt().domain(tagExtent).range([0.3, 1])
     const tagFontSizeScale = d3.scaleLinear().domain(tagExtent).range([12, 18]);
@@ -153,26 +192,68 @@ class App extends Component {
     };
 
     return (
-      <div className="sidebar" >
-        Tags:
+      <div>
+        <div ref="add-to-map-popup" style={{ display: addingToMap && addingToMap.position ? "block" : "none" }}>
+          <h2>Tell MyBurb</h2>
+          <form onSubmit={(event) => {
+            event.preventDefault();
+            console.log(event);
+            console.log(this.refs.comment);
+            // "idea-01"
+          } }>
+            <div>
+              <label>My idea is…</label><br />
+              <textarea height={3} />
+            </div>
+            <div>
+              <label>My name</label><br />
+              <input type="text" />
+            </div>
+            <div>
+              <label>My email</label><br />
+              <input type="text" />
+            </div>
+            <div>
+              <input type="checkbox" /> Yes, please keep me informed of the progress of my idea
+            </div>
+            <button onClick={(event) => {
+              window.popup.remove();
+              const side = 40;
+              var el = document.createElement('div');
+              el.className = 'marker';
+              el.style.backgroundImage = 'url(/idea-01.svg)';
+              el.style.width = side + 'px';
+              el.style.height = side + 'px';
+              new mapboxgl.Marker(el, {offset: [-side / 2, -side / 2]})
+                .setLngLat(this.state.addingToMap.position)
+                .addTo(map);
+              this.setState({ addingToMap: null })
+            } }>Submit</button>
+          </form>
+        </div>
+        {!addingToMap && <button className="add-to-map" onClick={this.addToMap.bind(this)}>Tell MyBurb</button>}
+        <button className="show-my-comments">Show my comments</button>
+        <div className="sidebar" >
+          Tags:
         <button className="filter-type" onClick={this.handleFilterTypeChange.bind(this)}>{filterType}</button>
-        {activeTags.size() !== tags.size() && <button className="reset-tags" onClick={this.resetTags.bind(this)}>Reset tags filter</button>}
-        <ul className="tags" >
-          {
-            tagEntries.map(({key, value}, index) => (
-              <li className="tag" key={key} style={{
-                fontSize: tagFontSizeScale(value),
-                color: tagColourScale(value),
-                background: tagBackgrounds(index, value),
-              }}>
-                <label>
-                  <input type="checkbox" checked={activeTags.has(key)} onChange={() => this.handleTagChange(key)} />
-                  {key}
-                </label>
-              </li>)
-            )
-          }
-        </ul >
+          {activeTags.size() !== tags.size() && <button className="reset-tags" onClick={this.resetTags.bind(this)}>Reset tags filter</button>}
+          <ul className="tags" >
+            {
+              tagEntries.map(({key, value}, index) => (
+                <li className="tag" key={key} style={{
+                  fontSize: tagFontSizeScale(value),
+                  color: tagColourScale(value),
+                  background: tagBackgrounds(index, value),
+                }}>
+                  <label>
+                    <input type="checkbox" checked={activeTags.has(key)} onChange={() => this.handleTagChange(key)} />
+                    {key}
+                  </label>
+                </li>)
+              )
+            }
+          </ul>
+        </div>
       </div >
     );
   }
